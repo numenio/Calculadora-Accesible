@@ -8,13 +8,18 @@ namespace CalculadoraAccesible
 {
     class formulaSencilla
     {
+        //double resultadoSinParentesis;
         public double resultado;
         public bool swEsFormulaValida = true;
         enum tipoOperacion { suma, resta, multiplicacion, division, ninguna };
 
         public formulaSencilla(string formula)
         {
-            swEsFormulaValida = realizarOperaciones(formula);
+            resultado = realizarOperacionesConParentesis(formula); //realizarOperaciones(formula);
+            if (resultado == -9999999)
+                swEsFormulaValida = false;
+            else
+                swEsFormulaValida = true;
         }
 
         double sumar (double a, double b)
@@ -37,7 +42,65 @@ namespace CalculadoraAccesible
             return a / b;
         }
 
-        bool realizarOperaciones(string formula)
+        bool formulaConParentesis(string formula)
+        {
+            if (formula.IndexOf('(') < 0) return false;
+            if (formula.IndexOf(')') < 0) return false;
+            return true;
+        }
+
+        double realizarOperacionesConParentesis (string formula)
+        {
+            try
+            {
+                if (!formulaConParentesis(formula))
+                    return realizarOperaciones(formula);
+                
+                int lugarPrimerCierraParentesis = formula.IndexOf(')');
+                int lugarAbreParéntesis = -1;
+
+                if (lugarPrimerCierraParentesis > 0) //si hay un cierra paréntesis
+                {
+                    for (int i = lugarPrimerCierraParentesis; i >= 0; i--)//se recorre hacia atrás la cadena desde el cierra paréntesis hasta encontrar el abre paréntesis
+                    {
+                        if (formula[i] == '(')
+                        {
+                            lugarAbreParéntesis = i;
+                            break;
+                        }    
+                    }
+                    if (lugarAbreParéntesis == -1)
+                        return -9999999; //; //si había cierra paréntesis, pero no habre paréntesis
+                    else
+                        lugarAbreParéntesis++;
+
+                    string formulaEntreParentesis = formula.Substring(lugarAbreParéntesis, lugarPrimerCierraParentesis - lugarAbreParéntesis);
+                    double swBienResuelto = realizarOperaciones(formulaEntreParentesis); //se resulve el paréntesis
+
+                    if (swBienResuelto == -9999999) return -9999999; //; //si hubo problema resolviendo el paréntesis, es no válido
+
+                    //se arma la fórmula reemplazando el paréntesis por el resultado
+                    string cadenaSinUnParentesis = formula.Substring(0, lugarAbreParéntesis-1);//desde el inicio hasta el abre paréntesis
+                    cadenaSinUnParentesis += swBienResuelto; //el resultado del paréntesis que se resolvió
+                    cadenaSinUnParentesis += formula.Substring(lugarPrimerCierraParentesis+1, formula.Length - lugarPrimerCierraParentesis-1); //desde el cierra paréntesis hasta el final de la fórmula
+
+                    //------------ITERADOR-----------------
+                    if (cadenaSinUnParentesis == "") //si no se procesó toda la fórmula, se itera de nuevo la función
+                        return swBienResuelto;
+
+                    //if (swBienResuelto != 0)
+                            return realizarOperacionesConParentesis(cadenaSinUnParentesis);
+                    //resultado = swBienResuelto;
+                }
+                return -9999999;
+            }
+            catch
+            {
+                return -9999999; //;
+            }
+        }
+
+        double realizarOperaciones(string formula)
         {
             List<string> elementosFormula = new List<string>();
             string auxNumero = "";
@@ -47,7 +110,15 @@ namespace CalculadoraAccesible
 
             try
             {
+                formula = realizarPotencias(formula); //si tiene potencias, se resuelven primero
+
                 int sumador = -1;
+                bool swHaySignoNegativo = false;
+                double posibleResult = 0;
+                bool swYaHayResult = double.TryParse(formula, out posibleResult);
+                if (swYaHayResult) return posibleResult;
+
+
                 //----------separamos cada elemento de la fórmula -----------------
                 foreach (char c in formula)
                 {
@@ -58,14 +129,21 @@ namespace CalculadoraAccesible
                     {
                         if (cAux == '=' || cAux == ' ') continue; //se saltea si escribió espacio o igual
 
-                        if (char.IsDigit(cAux) || cAux == ',' || (c == '-' && sumador == 0)) //sólo se carga el menos en el número si es el primmero
+                        if (char.IsDigit(cAux) || cAux == ',')// || (c == '-') && sumador == 0)) //sólo se carga el menos en el número si es el primmero
                         {
-                            auxNumero += cAux;
+                            if (swHaySignoNegativo)
+                                auxNumero += cAux;//"-" + cAux;
+                            else
+                                auxNumero += cAux;
 
                             if (auxLetras != "")
                             {
                                 elementosFormula.Add(auxLetras);
-                                auxLetras = "";
+                                
+                                //if (c != '-')
+                                    auxLetras = "";
+                                //else
+                                //    auxLetras = "-";
                             }
 
                             if (sumador == formula.Length - 1)
@@ -76,9 +154,47 @@ namespace CalculadoraAccesible
                         }
                         else //si es letra
                         {
-                            auxLetras += cAux;
+                            if (c == '-')
+                            {
+                                if (auxNumero == "-") //si el número ya es negativo
+                                {
+                                    //if (c == '-') //y viene otro negativo, negativo de un negativo es un positivo
+                                    //{
+                                        auxNumero = auxNumero.Substring(1, auxNumero.Length - 1);
+                                        swHaySignoNegativo = false;
+                                    //}
+                                }
+                                else
+                                {
 
-                            if (auxNumero != "")
+                                    //if (c == '-')
+                                    //{
+                                        cAux = '+';
+                                    double numero = 0;
+                                    bool swYaEsbuenNumero = double.TryParse(auxNumero, out numero);
+                                    if (swYaEsbuenNumero)
+                                    {
+                                        elementosFormula.Add(numero.ToString());
+                                        auxNumero = "-";
+                                    }
+                                    else
+                                        auxNumero += "-";
+                                        
+                                    swHaySignoNegativo = true;
+                                    //}
+                                    //else
+                                        
+                                }
+                            }
+                            else
+                                swHaySignoNegativo = false;
+
+
+                            if (auxLetras == "" && sumador > 0 && cAux != '-')
+                                auxLetras += cAux;
+                            
+
+                            if (auxNumero != "" && auxNumero != "-")
                             {
                                 elementosFormula.Add(auxNumero);
                                 auxNumero = "";
@@ -92,7 +208,7 @@ namespace CalculadoraAccesible
                         }
                     }
                     else
-                        return false; //si hay un carácter no válido la fórmula está mal
+                        return -9999999; //false; //si hay un carácter no válido la fórmula está mal
                 }
 
 
@@ -101,7 +217,7 @@ namespace CalculadoraAccesible
                 double auxResult = 0;
                 bool convertirPrimerNumero = double.TryParse(elementosFormula[0], out auxResult);
 
-                if (!convertirPrimerNumero) return false; //si no se pudo convertir el primer número es que se escribió mal la fórmula
+                if (!convertirPrimerNumero) return -9999999; //false; //si no se pudo convertir el primer número es que se escribió mal la fórmula
 
                 sumador = 0;
                 double b = 0;
@@ -122,13 +238,18 @@ namespace CalculadoraAccesible
                             {
                                 convertirPrimerNumero = double.TryParse(cadena, out b);
 
-                                if (!convertirPrimerNumero) return false;
+                                if (!convertirPrimerNumero) return -9999999; //false;
 
                                 switch (t)
                                 {
                                     case tipoOperacion.suma:
-                                        if (sumador == elementosFormula.Count - 1) //si no está en el final de los elementos
-                                            cadenaFormulaProcesada += "+" + b;
+                                        if (sumador == elementosFormula.Count - 1) //si está en el final de los elementos
+                                        {
+                                            if (tipoOpAnterior == tipoOperacion.suma || tipoOpAnterior == tipoOperacion.resta || tipoOpAnterior == tipoOperacion.ninguna)
+                                                cadenaFormulaProcesada += auxResult + "+" + b;
+                                            else
+                                                cadenaFormulaProcesada += "+" + b;
+                                        }
                                         else
                                         {
                                             if (tipoOpAnterior == tipoOperacion.suma || tipoOpAnterior == tipoOperacion.resta || tipoOpAnterior == tipoOperacion.ninguna)
@@ -145,15 +266,22 @@ namespace CalculadoraAccesible
 
 
 
-                                        if (sumador == elementosFormula.Count - 1) //si no está en el final de los elementos
-                                            cadenaFormulaProcesada += "-" + Math.Abs(b);
+                                        if (sumador == elementosFormula.Count - 1) //si está en el final de los elementos
+                                        {
+                                            //cadenaFormulaProcesada += "-" + Math.Abs(b);
+
+                                            if (tipoOpAnterior == tipoOperacion.suma || tipoOpAnterior == tipoOperacion.resta || tipoOpAnterior == tipoOperacion.ninguna)
+                                                cadenaFormulaProcesada += auxResult + b; //"-" + Math.Abs(b);
+                                            else
+                                                cadenaFormulaProcesada += b;// "-" + Math.Abs(b);
+                                        }
                                         else
                                         {
                                             if (tipoOpAnterior == tipoOperacion.suma || tipoOpAnterior == tipoOperacion.resta || tipoOpAnterior == tipoOperacion.ninguna)
                                                 cadenaFormulaProcesada += auxResult + "-";
                                             else
                                                 cadenaFormulaProcesada += "-";
-                                            auxResult = Math.Abs(b);
+                                            auxResult = b;//Math.Abs(b);
                                         }
                                         tipoOpAnterior = tipoOperacion.resta;
                                         break;
@@ -216,7 +344,7 @@ namespace CalculadoraAccesible
                                         t = tipoOperacion.division;
                                         break;
                                     default:
-                                        return false;
+                                        return -9999999; //false;
                                 }
                             }
 
@@ -238,7 +366,7 @@ namespace CalculadoraAccesible
                             {
                                 convertirPrimerNumero = double.TryParse(cadena, out b);
 
-                                if (!convertirPrimerNumero) return false;
+                                if (!convertirPrimerNumero) return -9999999; //false;
 
                                 switch (t)
                                 {
@@ -276,7 +404,7 @@ namespace CalculadoraAccesible
                                         t = tipoOperacion.division;
                                         break;
                                     default:
-                                        return false;
+                                        return -9999999;// false;
                                 }
                             }
 
@@ -287,19 +415,78 @@ namespace CalculadoraAccesible
                 }
 
                 //------------ITERADOR-----------------
-                if (cadenaFormulaProcesada != "") //si no se procesó toda la fórmula, se itera de nuevo la función
-                    realizarOperaciones(cadenaFormulaProcesada);
+                if (cadenaFormulaProcesada == "") //si no se procesó toda la fórmula, se itera de nuevo la función
+                    return auxResult;
 
-                if (resultado == 0)
-                    resultado = auxResult;
+                //if (resultadoSinParentesis == 0)
+                //resultadoSinParentesis = auxResult;
+                return realizarOperaciones(cadenaFormulaProcesada);
+
             }
             catch
             {
-                return false; //si hay error la fórmula está mal
+                return -9999999; //false; //si hay error la fórmula está mal
             }
-            return true;
+            //return - true;
         }
 
+        string realizarPotencias (string formula) //devuelve la fórmula igual pero con las pontecias realizadas
+        {
+            //string formulaLista = formula;
+
+            int lugarpotencia = formula.IndexOf('^');
+            if (lugarpotencia < 0 || lugarpotencia == formula.Length || lugarpotencia == 0) return formula; //si no hay potencias, o están al principio, o al final, se devuelve todo como llegó
+
+            //------------se busca la base, pueden ser números con coma o negativos
+            int lugarEmpiezaNumero = 0;
+            for (int i = lugarpotencia-1; i >= 0; i--)//se recorre hacia atrás para buscar la base de la potencia
+            {
+                if (!(char.IsDigit(formula[i]) || formula[i] == ',' || formula[i] == '-')) //si es número, o es una coma, o un signo negativo
+                {
+                    lugarEmpiezaNumero = i;
+                    break;
+                }
+            }
+            if (lugarEmpiezaNumero > 0)
+                lugarEmpiezaNumero++;
+
+            string numeroBase = formula.Substring(lugarEmpiezaNumero, lugarpotencia - lugarEmpiezaNumero);
+            double basePotencia = 0;
+            bool swBienResuelto = double.TryParse(numeroBase, out basePotencia); //se resulve el paréntesis
+
+            if (!swBienResuelto) return formula; //hay algún problema para extraer la base, por las dudas se devuelve la formula como vino
+
+
+            //----------se busca el exponente, puede ser número negativo----------------
+            int lugarTerminaNumero = formula.Length;
+            for (int i = lugarpotencia + 1; i <= formula.Length-1; i++)//se recorre hacia adelante después del signo de potencia para buscar su exponente de la potencia
+            {
+                if (!(char.IsDigit(formula[i]) || (formula[i] == '-' && i ==lugarpotencia + 1))) //si es número, o un signo negativo al principio
+                {
+                    lugarTerminaNumero = i;
+                    break;
+                }
+            }
+
+            string numeroExponente = formula.Substring(lugarpotencia +1, lugarTerminaNumero - lugarpotencia - 1);
+            double exponentePotencia = 0;
+            swBienResuelto = double.TryParse(numeroExponente, out exponentePotencia); //se resulve el paréntesis
+
+            if (!swBienResuelto) return formula; //hay algún problema para extraer la base, por las dudas se devuelve la formula como vino
+
+            double resultado = Math.Pow(basePotencia, exponentePotencia);
+
+            //se arma la fórmula reemplazando el paréntesis por el resultado
+            string cadenaResultado = formula.Substring(0, lugarEmpiezaNumero);//desde el inicio hasta el abre paréntesis
+            cadenaResultado += resultado; //el resultado del paréntesis que se resolvió
+            if (lugarTerminaNumero != formula.Length)
+                cadenaResultado += formula.Substring(lugarTerminaNumero, formula.Length - lugarTerminaNumero); //desde el cierra paréntesis hasta el final de la fórmula
+
+            if (!cadenaResultado.Contains('^'))
+                return cadenaResultado;
+
+            return realizarPotencias(cadenaResultado);
+        }
         
     }
 }

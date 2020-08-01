@@ -10,7 +10,7 @@ namespace CalculadoraAccesible
     {
         public bool esCaracterValido(char c, bool swIncluirEspacios)
         {
-            string caracteresValidos = "1234567890+-*/,";  //"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+=";
+            string caracteresValidos = "1234567890+-*/,()^";  //"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+=";
             if (swIncluirEspacios)
                 caracteresValidos += " ";
 
@@ -112,6 +112,12 @@ namespace CalculadoraAccesible
                 case '}':
                     aux = "ciera llave";
                     break;
+                case '(':
+                    aux = "abre paréntesis";
+                    break;
+                case ')':
+                    aux = "ciera paréntesis";
+                    break;
                 case '¨':
                     aux = "diéresis";
                     break;
@@ -134,7 +140,7 @@ namespace CalculadoraAccesible
                     aux = "menos";//"guión";
                     break;
                 case '^':
-                    aux = "acentro circunflejo";
+                    aux = "elevado a la";//"acentro circunflejo";
                     break;
                 case 'ç':
                     aux = "ce cerillas";

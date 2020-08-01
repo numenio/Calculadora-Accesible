@@ -38,7 +38,10 @@ namespace CalculadoraAccesible
             voz.cambiarVoz(voz.listarVocesPorIdioma("Español")[0]);
 
 
-            txtInfo.Text = "F1: lee esta ayuda. Enter: Da el resultado de la cuenta. F5, F6 y F7 modifican la voz. Flechas: leen lo escrito. Control: callar la voz.\nAutor: Guillermo Toscani (guillermo.toscani@gmail.com)";
+            txtInfo.Text = "F1: lee esta ayuda. Enter: Da el resultado de la cuenta. F5, F6 y F7 modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
+                "\nSe pueden hacer sumas, restas, multiplicaciones y divisiones. También usar paréntesis, tanto simples como anidados, y hacer potencias." +
+                "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al dar enter la cuenta y el resultado se copian automáticamente" +
+                "\nAutor: Guillermo Toscani (guillermo.toscani@gmail.com)";
             txtPedido.Text = "Escribí tu cuenta";
             txtFormula.Focus();
             voz.hablarAsync("Abriendo la calculadora. Escribí el cálculo que quieras hacer y apretá enter para saber el resultado. Si apretás efe uno vas escuchar la ayuda");
@@ -200,13 +203,19 @@ namespace CalculadoraAccesible
                 {
                     formulaSencilla f = new formulaSencilla(txtFormula.Text.Trim());
                     if (!f.swEsFormulaValida)
+                    {
                         voz.hablarAsync("la cuenta no está bien escrita. Por favor corregila y después apretá enter para saber el resultado");
+                        txtResultado.Text = "ERROR";
+                    }
                     else
                     {
-                        voz.hablarAsync("El resultado es " + new ValidadorCadenas().traducirCadenaParaLeer(f.resultado.ToString(), false));
+                        voz.hablarAsync("El resultado es " + new ValidadorCadenas().traducirCadenaParaLeer(f.resultado.ToString(), false) + ". copiado");
                         txtResultado.Text = f.resultado.ToString();
                     }
                 }
+
+                Clipboard.SetText(txtFormula.Text + "=" + txtResultado.Text);
+
                 return;
             }
         }
