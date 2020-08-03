@@ -7,11 +7,11 @@
         mc:Ignorable="d"
         Title="Calculadora Accesible" Height="468" Width="800" PreviewKeyDown="Window_PreviewKeyDown" Icon="icono-calculadora.jpg">
     <Grid>
-        <TextBox x:Name="txtFormula" HorizontalAlignment="Left" Height="76" Margin="93,119,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="617" FontSize="48" KeyUp="txtFormula_KeyUp"/>
-        <TextBlock x:Name="txtResultado" Foreground="Red" HorizontalAlignment="Left" Margin="36,205,0,0" VerticalAlignment="Top" Height="103" Width="709" FontSize="72" TextAlignment="Center" FontWeight="Bold"/>
+        <TextBox x:Name="txtFormula" Margin="93,119,82,0" TextWrapping="Wrap" FontSize="48" KeyUp="txtFormula_KeyUp" Height="76" VerticalAlignment="Top"/>
+        <TextBlock x:Name="txtResultado" Foreground="Red" Margin="36,205,47,0" VerticalAlignment="Top" Height="103" FontSize="72" TextAlignment="Center" FontWeight="Bold"/>
         <TextBlock x:Name="txtPedido" HorizontalAlignment="Left" Margin="160,33,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="60" Width="463" FontSize="36"/>
 
-        <TextBlock x:Name="txtInfo" HorizontalAlignment="Left" Margin="36,313,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="114" Width="709"/>
+        <TextBlock x:Name="txtInfo" Margin="36,313,47,15" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Bottom" Height="114"/>
 
     </Grid>
 </Window>

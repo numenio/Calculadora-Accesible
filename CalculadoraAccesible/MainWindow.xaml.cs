@@ -39,8 +39,8 @@ namespace CalculadoraAccesible
 
 
             txtInfo.Text = "F1: lee esta ayuda. Enter: Da el resultado de la cuenta. F5, F6 y F7 modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
-                "\nSe pueden hacer sumas, restas, multiplicaciones y divisiones. También usar paréntesis, tanto simples como anidados, y hacer potencias." +
-                "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al dar enter la cuenta y el resultado se copian automáticamente" +
+                "\nSe pueden hacer sumas, restas, multiplicaciones y divisiones. También usar paréntesis, tanto simples como anidados, y hacer potencias con el signo circunflejo (^)." +
+                "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al dar enter, la cuenta y el resultado se copian automáticamente" +
                 "\nAutor: Guillermo Toscani (guillermo.toscani@gmail.com)";
             txtPedido.Text = "Escribí tu cuenta";
             txtFormula.Focus();
@@ -189,6 +189,7 @@ namespace CalculadoraAccesible
                 else
                     cadena = "Borrando " + new ValidadorCadenas().traducirCadenaParaLeer(txtFormula.Text[posCursor].ToString(), true);
 
+                txtResultado.Text = "";
                 voz.hablarAsync(cadena);
                 return;
             }
