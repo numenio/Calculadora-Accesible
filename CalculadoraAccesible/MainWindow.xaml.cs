@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,6 +23,8 @@ namespace CalculadoraAccesible
     {
         List<string> voces = voz.listarVocesPorIdioma("Español");
         bool swSeManejoElEventoEnWindow = false;
+        bool swRedondear = true;
+        bool swResultadosFracciones = false;
 
 
         public MainWindow()
@@ -37,10 +40,20 @@ namespace CalculadoraAccesible
 
             voz.cambiarVoz(voz.listarVocesPorIdioma("Español")[0]);
 
+            txtFracciones.Foreground = Brushes.Black;
+            txtFracciones.Text = "FRACCIONES: NO (F3)";
 
-            txtInfo.Text = "F1: lee esta ayuda. Enter: Da el resultado de la cuenta. F5, F6 y F7 modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
-                "\nSe pueden hacer sumas, restas, multiplicaciones y divisiones. También usar paréntesis, tanto simples como anidados, y hacer potencias con el signo circunflejo (^)." +
-                "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al dar enter, la cuenta y el resultado se copian automáticamente" +
+            txtRedondear.Foreground = Brushes.Red;
+            txtRedondear.Text = "REDONDEAR: SÍ (F2)";
+
+
+            txtInfo.Text = "F1: lee esta ayuda. Enter: Da el resultado de la cuenta. F2: cambia el redondeo del resultado. F3: cambia resultados como decimales o fracciones." +
+                " F5, F6 y F7 modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
+                "\nSe pueden hacer sumas (+), restas (-), multiplicaciones (*) y divisiones (/). También usar paréntesis, tanto simples como anidados, " +
+                "lo que reemplaza el uso de corchetes y llaves." +
+                "\nPara hacer potencias se usa el signo circunflejo. Por ejemplo 2^3 sería 2 al cubo." +
+                "\nPara realizar raíces se usa el signo pesos. Por ejemplo 3$8 sería raíz cúbica de 8. Si se usa $9 sería raíz cuadrada de 9." +
+                "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al usar enter, la cuenta y el resultado se copian automáticamente" +
                 "\nAutor: Guillermo Toscani (guillermo.toscani@gmail.com)";
             txtPedido.Text = "Escribí tu cuenta";
             txtFormula.Focus();
@@ -54,7 +67,14 @@ namespace CalculadoraAccesible
 
             if (e.Key == Key.F1) //F1 leer la ayuda
             {
-                voz.hablarAsync(txtInfo.Text);
+                string ayuda = "efe uno: lee esta ayuda. Enter: Da el resultado de la cuenta. efe dos: cambia si el resultado se redondea o no. efe tres: muestra los resultados como decimales o como fracciones. efe cinco, efe seis y efe siete modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
+                "\nSe pueden hacer sumas usando el signo más, restas usando el guión, multiplicaciones usando asterisco y divisiones la barra diagonal. También usar paréntesis, tanto simples como anidados, " +
+                "lo que reemplaza el uso de corchetes y llaves." +
+                "\nPara hacer potencias se usa el signo circunflejo. Por ejemplo dos circunflejo tres sería dos al cubo." +
+                "\nPara realizar raíces se usa el signo pesos. Por ejemplo tres pesos ocho, sería raíz cúbica de ocho. Si se usa pesos nueve, sería raíz cuadrada de nueve." +
+                "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al usar enter, la cuenta y el resultado se copian automáticamente, lo que permite pegarlo en otro programa, por ejemplo Word" +
+                "\nAutor: Guillermo Toscani (guillermo.toscani@gmail.com)";
+                voz.hablarAsync(ayuda);
                 return;
             }
 
@@ -83,6 +103,47 @@ namespace CalculadoraAccesible
             if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) //control calla la voz
             {
                 voz.callar();
+                return;
+            }
+
+            if (e.Key == Key.F2) //F2 cambia redondeo del resultado
+            {
+                swRedondear = !swRedondear;
+                if (swRedondear)
+                {
+                    txtRedondear.Foreground = Brushes.Red;
+                    txtRedondear.Text = "REDONDEAR: SÍ (F2)";
+                    voz.hablarAsync("redondear el resultado activado");
+                }
+                else
+                {
+                    txtRedondear.Foreground = Brushes.Black;
+                    txtRedondear.Text = "REDONDEAR: NO (F2)";
+                    voz.hablarAsync("redondear el resultado desactivado");
+                }
+
+                txtResultado.Text = "";
+                return;
+            }
+
+            if (e.Key == Key.F3) //F3 dar los resultados como fracciones
+            {
+                swResultadosFracciones = !swResultadosFracciones;
+                if (swResultadosFracciones)
+                {
+                    txtFracciones.Foreground = Brushes.Red;
+                    txtFracciones.Text = "FRACCIONES: SÍ (F3)";
+                    voz.hablarAsync("resultados como fracciones activado");
+                }
+                else
+                {
+                    txtFracciones.Foreground = Brushes.Black;
+                    txtFracciones.Text = "FRACCIONES: NO (F3)";
+                    voz.hablarAsync("resultados como fracciones desactivado");
+                }
+
+                txtResultado.Text = "";
+
                 return;
             }
 
@@ -153,9 +214,22 @@ namespace CalculadoraAccesible
             }
 
 
-            if (!swSeManejoElEventoEnWindow)
+            if (!swSeManejoElEventoEnWindow && txtFormula.Text.Trim() != "" && txtFormula.Text.Trim() != "-" && txtFormula.Text.Trim() != "+" && txtFormula.Text.Trim() != "$" && txtFormula.Text.Trim() != "*" && txtFormula.Text.Trim() != "/" && txtFormula.Text.Trim() != "^")
             {
-                txtResultado.Text = "";
+                formulaSencilla f = new formulaSencilla(txtFormula.Text.Trim(), swRedondear); //se va escribiendo el resultado a medida que escribe la cuenta
+                if (!f.swEsFormulaValida)
+                {
+                    txtResultado.Text = "";
+                }
+                else
+                {
+                    if (swResultadosFracciones)
+                        txtResultado.Text = new formulaSencilla().DecimalToFraction(f.resultado);
+                    else
+                        txtResultado.Text = f.resultado.ToString();
+                    //txtResultado.Text = f.resultado.ToString();
+                }
+                //txtResultado.Text = "";
                 int posCursor = txtFormula.SelectionStart;
                 posCursor--;
                 if (posCursor < 0) posCursor = 0;
@@ -202,7 +276,8 @@ namespace CalculadoraAccesible
                     voz.hablarAsync("no hay una cuenta escrita. Para apretar enter, primero escribí el cálculo");
                 else
                 {
-                    formulaSencilla f = new formulaSencilla(txtFormula.Text.Trim());
+                    formulaSencilla f = new formulaSencilla(txtFormula.Text.Trim(), swRedondear);
+
                     if (!f.swEsFormulaValida)
                     {
                         voz.hablarAsync("la cuenta no está bien escrita. Por favor corregila y después apretá enter para saber el resultado");
@@ -210,8 +285,13 @@ namespace CalculadoraAccesible
                     }
                     else
                     {
-                        voz.hablarAsync("El resultado es " + new ValidadorCadenas().traducirCadenaParaLeer(f.resultado.ToString(), false) + ". copiado");
-                        txtResultado.Text = f.resultado.ToString();
+                        if (swResultadosFracciones)
+                            txtResultado.Text = new formulaSencilla().DecimalToFraction(f.resultado);
+                        else
+                            txtResultado.Text = f.resultado.ToString();
+
+                        voz.hablarAsync("El resultado es " + new ValidadorCadenas().traducirCadenaParaLeer(txtResultado.Text, false) + ". copiado");
+                        //txtResultado.Text = f.resultado.ToString();
                     }
                 }
 

@@ -5,13 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CalculadoraAccesible"
         mc:Ignorable="d"
-        Title="Calculadora Accesible" Height="468" Width="800" PreviewKeyDown="Window_PreviewKeyDown" Icon="icono-calculadora.jpg">
+        Title="Calculadora Accesible" Height="512" Width="800" PreviewKeyDown="Window_PreviewKeyDown" Icon="icono-calculadora.jpg">
     <Grid>
-        <TextBox x:Name="txtFormula" Margin="93,119,82,0" TextWrapping="Wrap" FontSize="48" KeyUp="txtFormula_KeyUp" Height="76" VerticalAlignment="Top"/>
-        <TextBlock x:Name="txtResultado" Foreground="Red" Margin="36,205,47,0" VerticalAlignment="Top" Height="103" FontSize="72" TextAlignment="Center" FontWeight="Bold"/>
-        <TextBlock x:Name="txtPedido" HorizontalAlignment="Left" Margin="160,33,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="60" Width="463" FontSize="36"/>
+        <TextBox x:Name="txtFormula" Margin="87,119,88,0" TextWrapping="Wrap" FontSize="48" KeyUp="txtFormula_KeyUp" Height="76" VerticalAlignment="Top"/>
+        <TextBlock x:Name="txtResultado" Foreground="Red" Margin="41,205,42,0" VerticalAlignment="Top" Height="103" FontSize="72" TextAlignment="Center" FontWeight="Bold"/>
+        <TextBlock x:Name="txtPedido" HorizontalAlignment="Left" Margin="87,45,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="60" Width="441" FontSize="36"/>
 
-        <TextBlock x:Name="txtInfo" Margin="36,313,47,15" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Bottom" Height="114"/>
+        <TextBlock x:Name="txtInfo" Margin="41,0,42,15" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Bottom" Height="129"/>
+        <TextBlock x:Name="txtRedondear" Margin="0,10,10,0" TextWrapping="Wrap" Text="REDONDEAR: SÍ (F2)" VerticalAlignment="Top" Foreground="#FF0B21F5" HorizontalAlignment="Right" Width="140"/>
+        <TextBlock x:Name="txtFracciones" Margin="0,10,155,0" TextWrapping="Wrap" Text="FRACCIONES: NO (F3)" VerticalAlignment="Top" Foreground="#FF1125F1" HorizontalAlignment="Right" Width="140"/>
 
     </Grid>
 </Window>

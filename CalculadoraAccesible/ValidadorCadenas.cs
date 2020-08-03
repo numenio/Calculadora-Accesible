@@ -10,7 +10,7 @@ namespace CalculadoraAccesible
     {
         public bool esCaracterValido(char c, bool swIncluirEspacios)
         {
-            string caracteresValidos = "1234567890+-*/,()^";  //"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+=";
+            string caracteresValidos = "1234567890+-*/,()^$";  //"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+=";
             if (swIncluirEspacios)
                 caracteresValidos += " ";
 
@@ -194,7 +194,7 @@ namespace CalculadoraAccesible
                     aux = "tilde";
                     break;
                 case '$':
-                    aux = "pesos";
+                    aux = "raíz de";//"pesos";
                     break;
                 case '%':
                     aux = "porcentaje";

@@ -14,13 +14,30 @@ namespace CalculadoraAccesible
         const double codigoError = 12345678.987654321385638;
         enum tipoOperacion { suma, resta, multiplicacion, division, ninguna };
 
-        public formulaSencilla(string formula)
+        public formulaSencilla(string formula, bool redondear)
         {
             resultado = realizarOperacionesConParentesis(formula); //realizarOperaciones(formula);
+            if (redondear) //si hay que redondear, se devuelven sólo dos dígitos si hay decimal
+                resultado = Math.Round(resultado, 2);
+
+            //if (resultadoComoFraccion)
+            //{
+            //    string fraccion = DecimalToFraction(resultado);
+            //    double result = 0;
+            //    bool swConversion = double.TryParse(, out result);
+            //    if (swConversion)
+            //        resultado = result;
+            //}
+
             if (resultado == codigoError)
                 swEsFormulaValida = false;
             else
                 swEsFormulaValida = true;
+        }
+
+        public formulaSencilla() //constructor para poder usar la función DecimalToFraction
+        {
+
         }
 
         double sumar (double a, double b)
@@ -111,7 +128,9 @@ namespace CalculadoraAccesible
 
             try
             {
+                formula = realizarRaices(formula); //si tiene raíces
                 formula = realizarPotencias(formula); //si tiene potencias, se resuelven primero
+                
 
                 int sumador = -1;
                 bool swHaySignoNegativo = false;
@@ -435,15 +454,17 @@ namespace CalculadoraAccesible
         {
             //string formulaLista = formula;
             int sumador = 0;
+            int añadido = 0;
             foreach (char c in formula) //recorremos la fórmula para que no haya signo negativo sin antes un +
             {
                 //if (>1)
                 //{
                     if (c == '-' && sumador > 0)
                     {
-                        if (char.IsDigit(formula[sumador - 1])) //si hay un número antes del -
+                        if (char.IsDigit(formula[sumador + añadido - 1])) //si hay un número antes del -
                         {
                             formula = formula.Substring(0, sumador) + "+" + formula.Substring(sumador, formula.Length - sumador); //añadimos el +
+                            añadido++;
                         }
                     }
                 //}
@@ -504,6 +525,203 @@ namespace CalculadoraAccesible
 
             return realizarPotencias(cadenaResultado);
         }
-        
+
+        string realizarRaices(string formula) //devuelve la fórmula igual pero con las pontecias realizadas
+        {
+            //string formulaLista = formula;
+            int sumador = 0;
+            //foreach (char c in formula) //recorremos la fórmula para que no haya signo negativo sin antes un +
+            //{
+            //    if (c == '-' && sumador > 0)
+            //    {
+            //        if (char.IsDigit(formula[sumador - 1])) //si hay un número antes del -
+            //        {
+            //            formula = formula.Substring(0, sumador) + "+" + formula.Substring(sumador, formula.Length - sumador); //añadimos el +
+            //        }
+            //    }
+            //    //}
+            //    sumador++;
+            //}
+
+            sumador = 0;
+            int añadido = 0;
+            foreach (char c in formula) //recorremos la fórmula para poner un 2 antes de $ si es raíz cuadrada
+            {
+                if (c == '$')
+                {
+                    if (sumador == 0) //si el $ está al inicio
+                    {
+                        formula = "2" + formula;
+                        añadido++;
+                    }
+                    else
+                    {
+                        if (!char.IsDigit(formula[sumador + añadido - 1])) //si NO hay un número antes del -
+                        {
+                            formula = formula.Substring(0, sumador + añadido) + "2" + formula.Substring(sumador + añadido, formula.Length - sumador - añadido); //añadimos el +
+                            añadido++;
+                        }
+                    }
+                }
+                //}
+                sumador++;
+            }
+
+
+            int lugarRaiz = formula.LastIndexOf('$');
+            if (lugarRaiz < 0 || lugarRaiz == formula.Length) return formula; //si no hay raíces, o están al principio, o al final, se devuelve todo como llegó
+
+
+            //------------se busca el índice, pueden ser números con coma o negativos
+            int lugarEmpiezaNumero = 0;
+            for (int i = lugarRaiz - 1; i >= 0; i--)//se recorre hacia atrás para buscar la base de la potencia
+            {
+                if (!(char.IsDigit(formula[i]) || formula[i] == ',' || (formula[i] == '-' && !char.IsDigit(formula[i - 1])))) //si es número, o es una coma, o un signo negativo
+                {
+                    //if (formula[i] == '-' && !char.IsDigit(formula[i-1]))
+                    //{
+                    //    lugarEmpiezaNumero = i + 1;
+                    //    break;
+                    //}
+                    //else
+                    //{
+                        lugarEmpiezaNumero = i +1;
+                        break;
+                    //}
+                }
+            }
+            //if (lugarEmpiezaNumero > 0)
+            //    lugarEmpiezaNumero++;
+
+            string numeroIndice = formula.Substring(lugarEmpiezaNumero, lugarRaiz - lugarEmpiezaNumero);
+            double indicePotencia = int.Parse(numeroIndice);
+            bool swBienResuelto = double.TryParse(numeroIndice, out indicePotencia); //se convierte el índice
+
+            if (!swBienResuelto) return formula; //hay algún problema para extraer la base, por las dudas se devuelve la formula como vino
+
+
+            //----------se busca la base, puede ser número negativa o decimal----------------
+            int lugarTerminaNumero = formula.Length;
+            for (int i = lugarRaiz + 1; i <= formula.Length - 1; i++)//se recorre hacia adelante después del signo de potencia para buscar su exponente de la potencia
+            {
+                if (!(char.IsDigit(formula[i]) || formula[i] == ',' || (formula[i] == '-' && i == lugarRaiz + 1))) //si es número, o un signo negativo al principio
+                {
+                        lugarTerminaNumero = i;
+                    break;
+                }
+            }
+
+            string numeroBase = formula.Substring(lugarRaiz + 1, lugarTerminaNumero - lugarRaiz - 1);
+            double basePotencia = 0;
+            swBienResuelto = double.TryParse(numeroBase, out basePotencia); //se resulve el paréntesis
+
+            if (!swBienResuelto) return formula; //hay algún problema para extraer la base, por las dudas se devuelve la formula como vino
+
+            if (indicePotencia%2 == 0 && basePotencia < 0) //si es par y es negativo
+                return "ERROR";
+
+            double resultado = Math.Pow(Math.Abs(basePotencia), 1/indicePotencia);
+
+            if (basePotencia < 0) //si la base es negativa, se hace la potencia por el positivo y se añade el signo negativo
+                resultado *= -1; 
+
+            //se arma la fórmula reemplazando el paréntesis por el resultado
+            string cadenaResultado = formula.Substring(0, lugarEmpiezaNumero);//desde el inicio hasta el abre paréntesis
+            cadenaResultado += resultado; //el resultado del paréntesis que se resolvió
+            if (lugarTerminaNumero != formula.Length)
+                cadenaResultado += formula.Substring(lugarTerminaNumero, formula.Length - lugarTerminaNumero); //desde el cierra paréntesis hasta el final de la fórmula
+
+            if (!cadenaResultado.Contains('$'))
+                return cadenaResultado;
+
+            return realizarRaices(cadenaResultado);
+        }
+
+        /// <summary>
+        /// Converts Decimals into Fractions.
+        /// </summary>
+        /// <param name="value">Decimal value</param>
+        /// <returns>Fraction in string type</returns>
+        /// tomado desde acá: https://www.it-swarm.dev/es/c%23/algoritmo-para-simplificar-el-decimal-fracciones/971807271/ 
+        /// Gracias a esta gran contribución! (pequeños arreglos para que funcione con números negativos y con enteros sin coma)
+        public string DecimalToFraction(double value)
+        {
+            int parteEntera = (int)value;
+            double parteDecimal = value - parteEntera;
+            if (parteDecimal == 0) return value.ToString(); //si es un número entero, se devuelve así como viene
+            bool swEsNegativo = false;
+            if (value < 0) swEsNegativo = true;
+            value = Math.Abs(value);
+            string result;
+            double numerator, realValue = value;
+            int num, den, decimals, length;
+            num = (int)value;
+            value = value - num;
+            value = Math.Round(value, 5);
+            length = value.ToString().Length;
+            decimals = length - 2;
+            numerator = value;
+            for (int i = 0; i < decimals; i++)
+            {
+                if (realValue < 1)
+                {
+                    numerator = numerator * 10;
+                }
+                else
+                {
+                    realValue = realValue * 10;
+                    numerator = realValue;
+                }
+            }
+            den = length - 2;
+            string ten = "1";
+            for (int i = 0; i < den; i++)
+            {
+                ten = ten + "0";
+            }
+            den = int.Parse(ten);
+            num = (int)numerator;
+            result = SimplifiedFractions(num, den);
+            if (swEsNegativo) result = "-" + result;
+            if (result == "0/1" || result == "-0/1") result = "0";
+            if (result == "12345678,99") result = "ERROR";
+            return result;
+        }
+
+        /// <summary>
+        /// Converts Fractions into Simplest form.
+        /// </summary>
+        /// <param name="num">Numerator</param>
+        /// <param name="den">Denominator</param>
+        /// <returns>Simplest Fractions in string type</returns>
+        string SimplifiedFractions(int num, int den)
+        {
+            int remNum, remDen, counter;
+            if (num > den)
+            {
+                counter = den;
+            }
+            else
+            {
+                counter = num;
+            }
+            for (int i = 2; i <= counter; i++)
+            {
+                remNum = num % i;
+                if (remNum == 0)
+                {
+                    remDen = den % i;
+                    if (remDen == 0)
+                    {
+                        num = num / i;
+                        den = den / i;
+                        i--;
+                    }
+                }
+            }
+            return num.ToString() + "/" + den.ToString();
+        }
     }
+
 }
+
