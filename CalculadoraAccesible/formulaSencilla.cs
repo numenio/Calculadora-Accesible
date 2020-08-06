@@ -17,22 +17,15 @@ namespace CalculadoraAccesible
         public formulaSencilla(string formula, bool redondear)
         {
             resultado = realizarOperacionesConParentesis(formula); //realizarOperaciones(formula);
-            if (redondear) //si hay que redondear, se devuelven sólo dos dígitos si hay decimal
-                resultado = Math.Round(resultado, 2);
-
-            //if (resultadoComoFraccion)
-            //{
-            //    string fraccion = DecimalToFraction(resultado);
-            //    double result = 0;
-            //    bool swConversion = double.TryParse(, out result);
-            //    if (swConversion)
-            //        resultado = result;
-            //}
 
             if (resultado == codigoError)
                 swEsFormulaValida = false;
             else
                 swEsFormulaValida = true;
+
+            if (redondear) //si hay que redondear, se devuelven sólo dos dígitos si hay decimal
+                resultado = Math.Round(resultado, 2);
+
         }
 
         public formulaSencilla() //constructor para poder usar la función DecimalToFraction
@@ -457,17 +450,14 @@ namespace CalculadoraAccesible
             int añadido = 0;
             foreach (char c in formula) //recorremos la fórmula para que no haya signo negativo sin antes un +
             {
-                //if (>1)
-                //{
-                    if (c == '-' && sumador > 0)
+                if (c == '-' && sumador > 0)
+                {
+                    if (char.IsDigit(formula[sumador + añadido - 1])) //si hay un número antes del -
                     {
-                        if (char.IsDigit(formula[sumador + añadido - 1])) //si hay un número antes del -
-                        {
-                            formula = formula.Substring(0, sumador) + "+" + formula.Substring(sumador, formula.Length - sumador); //añadimos el +
-                            añadido++;
-                        }
+                        formula = formula.Substring(0, sumador) + "+" + formula.Substring(sumador, formula.Length - sumador); //añadimos el +
+                        añadido++;
                     }
-                //}
+                }
                 sumador++;
             }
 
@@ -528,20 +518,7 @@ namespace CalculadoraAccesible
 
         string realizarRaices(string formula) //devuelve la fórmula igual pero con las pontecias realizadas
         {
-            //string formulaLista = formula;
             int sumador = 0;
-            //foreach (char c in formula) //recorremos la fórmula para que no haya signo negativo sin antes un +
-            //{
-            //    if (c == '-' && sumador > 0)
-            //    {
-            //        if (char.IsDigit(formula[sumador - 1])) //si hay un número antes del -
-            //        {
-            //            formula = formula.Substring(0, sumador) + "+" + formula.Substring(sumador, formula.Length - sumador); //añadimos el +
-            //        }
-            //    }
-            //    //}
-            //    sumador++;
-            //}
 
             sumador = 0;
             int añadido = 0;
@@ -684,7 +661,6 @@ namespace CalculadoraAccesible
             result = SimplifiedFractions(num, den);
             if (swEsNegativo) result = "-" + result;
             if (result == "0/1" || result == "-0/1") result = "0";
-            if (result == "12345678,99") result = "ERROR";
             return result;
         }
 
@@ -722,6 +698,11 @@ namespace CalculadoraAccesible
             return num.ToString() + "/" + den.ToString();
         }
     }
+
+    //string realizarTrigonometria (string formula)
+    //{
+
+    //}
 
 }
 

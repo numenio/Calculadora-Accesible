@@ -13,6 +13,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Net;
+using System.Diagnostics;
 
 namespace CalculadoraAccesible
 {
@@ -24,7 +26,7 @@ namespace CalculadoraAccesible
         List<string> voces = voz.listarVocesPorIdioma("Español");
         bool swSeManejoElEventoEnWindow = false;
         bool swRedondear = true;
-        bool swResultadosFracciones = false;
+        //bool swResultadosFracciones = false;
 
 
         public MainWindow()
@@ -38,26 +40,46 @@ namespace CalculadoraAccesible
                 return;
             }
 
-            voz.cambiarVoz(voz.listarVocesPorIdioma("Español")[0]);
+            try { 
+                WebClient webClient = new WebClient();
+                if (!webClient.DownloadString("https://pastebin.com/raw/jkG8NyGM").Contains("1.0"))
+                {
+                    if (MessageBox.Show("Hay una actualización de la Calculadora. Desea descargarla?", "Actualización", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start("https://guilletoscani.weebly.com/uploads/1/3/3/2/133298324/calculadora_accesible.exe");
+                    }
+                }
+                //else
+                //{
+                //    MessageBox.Show("Todo actualizado");
 
-            txtFracciones.Foreground = Brushes.Black;
-            txtFracciones.Text = "FRACCIONES: NO (F3)";
+                //}
+            }
+            catch
+            { }
+            finally
+            {
+                voz.cambiarVoz(voz.listarVocesPorIdioma("Español")[0]);
 
-            txtRedondear.Foreground = Brushes.Red;
-            txtRedondear.Text = "REDONDEAR: SÍ (F2)";
+                //txtFracciones.Foreground = Brushes.Black;
+                //txtFracciones.Text = "FRACCIONES: NO (F3)";
+
+                txtRedondear.Foreground = Brushes.Red;
+                txtRedondear.Text = "REDONDEAR: SÍ (F2)";
 
 
-            txtInfo.Text = "F1: lee esta ayuda. Enter: Da el resultado de la cuenta. F2: cambia el redondeo del resultado. F3: cambia resultados como decimales o fracciones." +
-                " F5, F6 y F7 modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
-                "\nSe pueden hacer sumas (+), restas (-), multiplicaciones (*) y divisiones (/). También usar paréntesis, tanto simples como anidados, " +
-                "lo que reemplaza el uso de corchetes y llaves." +
-                "\nPara hacer potencias se usa el signo circunflejo. Por ejemplo 2^3 sería 2 al cubo." +
-                "\nPara realizar raíces se usa el signo pesos. Por ejemplo 3$8 sería raíz cúbica de 8. Si se usa $9 sería raíz cuadrada de 9." +
-                "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al usar enter, la cuenta y el resultado se copian automáticamente" +
-                "\nAutor: Guillermo Toscani (guillermo.toscani@gmail.com)";
-            txtPedido.Text = "Escribí tu cuenta";
-            txtFormula.Focus();
-            voz.hablarAsync("Abriendo la calculadora. Escribí el cálculo que quieras hacer y apretá enter para saber el resultado. Si apretás efe uno vas escuchar la ayuda");
+                txtInfo.Text = "F1: lee esta ayuda. Enter: Da el resultado de la cuenta. F2: cambia el redondeo del resultado." +
+                    " F5, F6 y F7 modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
+                    "\nSe pueden hacer sumas (+), restas (-), multiplicaciones (*) y divisiones (/). También usar paréntesis, tanto simples como anidados, " +
+                    "lo que reemplaza el uso de corchetes y llaves." +
+                    "\nPara hacer potencias se usa el signo circunflejo. Por ejemplo 2^3 sería 2 al cubo." +
+                    "\nPara realizar raíces se usa el signo pesos. Por ejemplo 3$8 sería raíz cúbica de 8. Si se usa $9 sería raíz cuadrada de 9." +
+                    "\nTrabaja con números enteros, positivos y negativos, y con decimales. Al usar enter, la cuenta y el resultado se copian automáticamente" +
+                    "\nAutor: Guillermo Toscani (guillermo.toscani@gmail.com)";
+                txtPedido.Text = "Escribí tu cuenta";
+                txtFormula.Focus();
+                voz.hablarAsync("Abriendo la calculadora. Escribí el cálculo que quieras hacer y apretá enter para saber el resultado. Si apretás efe uno vas escuchar la ayuda");
+            }
         
         }
 
@@ -67,7 +89,7 @@ namespace CalculadoraAccesible
 
             if (e.Key == Key.F1) //F1 leer la ayuda
             {
-                string ayuda = "efe uno: lee esta ayuda. Enter: Da el resultado de la cuenta. efe dos: cambia si el resultado se redondea o no. efe tres: muestra los resultados como decimales o como fracciones. efe cinco, efe seis y efe siete modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
+                string ayuda = "efe uno: lee esta ayuda. Enter: Da el resultado de la cuenta. efe dos: cambia si el resultado se redondea o no. efe cinco, efe seis y efe siete modifican la voz. Flechas: leen lo escrito. Control: callar la voz." +
                 "\nSe pueden hacer sumas usando el signo más, restas usando el guión, multiplicaciones usando asterisco y divisiones la barra diagonal. También usar paréntesis, tanto simples como anidados, " +
                 "lo que reemplaza el uso de corchetes y llaves." +
                 "\nPara hacer potencias se usa el signo circunflejo. Por ejemplo dos circunflejo tres sería dos al cubo." +
@@ -126,26 +148,26 @@ namespace CalculadoraAccesible
                 return;
             }
 
-            if (e.Key == Key.F3) //F3 dar los resultados como fracciones
-            {
-                swResultadosFracciones = !swResultadosFracciones;
-                if (swResultadosFracciones)
-                {
-                    txtFracciones.Foreground = Brushes.Red;
-                    txtFracciones.Text = "FRACCIONES: SÍ (F3)";
-                    voz.hablarAsync("resultados como fracciones activado");
-                }
-                else
-                {
-                    txtFracciones.Foreground = Brushes.Black;
-                    txtFracciones.Text = "FRACCIONES: NO (F3)";
-                    voz.hablarAsync("resultados como fracciones desactivado");
-                }
+            //if (e.Key == Key.F3) //F3 dar los resultados como fracciones
+            //{
+            //    swResultadosFracciones = !swResultadosFracciones;
+            //    if (swResultadosFracciones)
+            //    {
+            //        txtFracciones.Foreground = Brushes.Red;
+            //        txtFracciones.Text = "FRACCIONES: SÍ (F3)";
+            //        voz.hablarAsync("resultados como fracciones activado");
+            //    }
+            //    else
+            //    {
+            //        txtFracciones.Foreground = Brushes.Black;
+            //        txtFracciones.Text = "FRACCIONES: NO (F3)";
+            //        voz.hablarAsync("resultados como fracciones desactivado");
+            //    }
 
-                txtResultado.Text = "";
+            //    txtResultado.Text = "";
 
-                return;
-            }
+            //    return;
+            //}
 
             if (e.Key == Key.F5) //F5 más lento
             {
@@ -223,13 +245,13 @@ namespace CalculadoraAccesible
                 }
                 else
                 {
-                    if (swResultadosFracciones)
-                        txtResultado.Text = new formulaSencilla().DecimalToFraction(f.resultado);
-                    else
+                    //if (swResultadosFracciones)
+                    //    txtResultado.Text = new formulaSencilla().DecimalToFraction(f.resultado);
+                    //else
                         txtResultado.Text = f.resultado.ToString();
-                    //txtResultado.Text = f.resultado.ToString();
+                    
                 }
-                //txtResultado.Text = "";
+                
                 int posCursor = txtFormula.SelectionStart;
                 posCursor--;
                 if (posCursor < 0) posCursor = 0;
@@ -285,13 +307,12 @@ namespace CalculadoraAccesible
                     }
                     else
                     {
-                        if (swResultadosFracciones)
-                            txtResultado.Text = new formulaSencilla().DecimalToFraction(f.resultado);
-                        else
+                        //if (swResultadosFracciones)
+                        //    txtResultado.Text = new formulaSencilla().DecimalToFraction(f.resultado);
+                        //else
                             txtResultado.Text = f.resultado.ToString();
 
                         voz.hablarAsync("El resultado es " + new ValidadorCadenas().traducirCadenaParaLeer(txtResultado.Text, false) + ". copiado");
-                        //txtResultado.Text = f.resultado.ToString();
                     }
                 }
 
