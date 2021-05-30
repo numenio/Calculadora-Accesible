@@ -58,7 +58,7 @@ namespace CalculadoraAccesible
             foreach (InstalledVoice voz in lista)
             {
                 //CultureInfo cultura = new CultureInfo("es-ES");
-                if (voz.VoiceInfo.Culture.Parent.DisplayName == idioma) // cultura.Parent.DisplayName)
+                if (voz.VoiceInfo.Culture.ThreeLetterISOLanguageName == idioma) //(voz.VoiceInfo.Culture.Parent.DisplayName == idioma) 
                     listaNombreVoces.Add(voz.VoiceInfo.Name);
             }
             return listaNombreVoces;
@@ -70,19 +70,19 @@ namespace CalculadoraAccesible
             ReadOnlyCollection<InstalledVoice> lista = sintetizador.GetInstalledVoices();
             foreach (InstalledVoice voz in lista)
             {
-                if (!listaIdiomaVoces.Contains(voz.VoiceInfo.Culture.Parent.DisplayName)) //si no está repetida se añade
-                    listaIdiomaVoces.Add(voz.VoiceInfo.Culture.Parent.DisplayName);
+                if (!listaIdiomaVoces.Contains(voz.VoiceInfo.Culture.ThreeLetterISOLanguageName))//Parent.DisplayName)) //si no está repetida se añade
+                    listaIdiomaVoces.Add(voz.VoiceInfo.Culture.ThreeLetterISOLanguageName);//Parent.DisplayName);
             }
 
             return listaIdiomaVoces;
         }
 
-        public static void cambiarVoz(string quéVoz)
+        public static void cambiarVoz(string idioma, string quéVoz)
         {
             //int sintetizadorEstá = listarIdiomasInstalados().IndexOf(quéVoz);
             voz.callar();
-            if (listarVocesPorIdioma("Español").IndexOf(quéVoz) == -1) //si no está el sintetizador instalado, se pone el primero que haya
-                sintetizador.SelectVoice(listarVocesPorIdioma("Español")[0]);
+            if (listarVocesPorIdioma(idioma).IndexOf(quéVoz) == -1) //si no está el sintetizador instalado, se pone el primero que haya
+                sintetizador.SelectVoice(listarVocesPorIdioma(idioma)[0]);
             else
                 sintetizador.SelectVoice(quéVoz);
         }

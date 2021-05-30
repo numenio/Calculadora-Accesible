@@ -58,7 +58,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="calculadoraPolinomios.cs" />
+    <Compile Include="enviadorCorreo.cs" />
     <Compile Include="formulaSencilla.cs" />
+    <Compile Include="Polinomio.cs" />
+    <Compile Include="terminoPolinomio.cs" />
     <Compile Include="ValidadorCadenas.cs" />
     <Compile Include="voz.cs" />
     <Page Include="MainWindow.xaml">

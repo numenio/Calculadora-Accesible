@@ -16,7 +16,14 @@ namespace CalculadoraAccesible
 
         public formulaSencilla(string formula, bool redondear)
         {
-            resultado = realizarOperacionesConParentesis(formula); //realizarOperaciones(formula);
+            if (new ValidadorCadenas().chequearFormulaValidaPorOperaciones(formula))  //si la fórmula no tiene problemas de escritura
+            {
+                formula = quitarIgualFinFormula(formula);
+                formula = ponerPorEnNumeroFrenteAParentesis(formula);
+                resultado = realizarOperacionesConParentesis(formula); //realizarOperaciones(formula);
+            }
+            else
+                resultado = codigoError;
 
             if (resultado == codigoError)
                 swEsFormulaValida = false;
@@ -31,6 +38,15 @@ namespace CalculadoraAccesible
         public formulaSencilla() //constructor para poder usar la función DecimalToFraction
         {
 
+        }
+
+        string quitarIgualFinFormula (string formula)
+        {
+            formula = new ValidadorCadenas().quitarEspaciosEncadena(formula);
+            if (formula[formula.Length - 1] == '=') //si hay un igual al final de la fórmula
+                formula = formula.Substring(0, formula.Length - 1); //se lo saca
+
+            return formula;
         }
 
         double sumar (double a, double b)
@@ -58,6 +74,23 @@ namespace CalculadoraAccesible
             if (formula.IndexOf('(') < 0) return false;
             if (formula.IndexOf(')') < 0) return false;
             return true;
+        }
+
+        string ponerPorEnNumeroFrenteAParentesis(string formula)
+        {
+            string aux = new ValidadorCadenas().quitarEspaciosEncadena(formula);
+            try
+            {
+                if (aux.IndexOf('(') > 0) //si hay un paréntesis que no esté en el primer lugar
+                    aux = aux.Substring(0, aux.IndexOf('(')) + "*" + aux.Substring(aux.IndexOf('('), aux.Length - aux.IndexOf('('));
+
+                return aux;
+            }
+            catch
+            {
+                return formula;
+            }
+
         }
 
         double realizarOperacionesConParentesis (string formula)
@@ -121,6 +154,9 @@ namespace CalculadoraAccesible
 
             try
             {
+                //formula = simplificarSignosRepetidos(formula); //se quitan los signos positivos o negativos acumulados
+                formula = simplificarTodosLosSignosRepetidos(formula); //se quitan los signos positivos o negativos acumulados
+                //formula = ponerPorEnNumeroFrenteAParentesis(formula);
                 formula = realizarRaices(formula); //si tiene raíces
                 formula = realizarPotencias(formula); //si tiene potencias, se resuelven primero
                 
@@ -182,7 +218,7 @@ namespace CalculadoraAccesible
 
                                     //if (c == '-')
                                     //{
-                                        cAux = '+';
+                                        //cAux = '+'; <------------------- 22/05/21 REVISAR SI SACANDO ESTA LÍNEA MATÉ ALGO. LA SACO PORQUE PONE UN + SOLO AL PRINCIPIO DE LA FORMULA Y ESO TIRA ERROR CUANDO SE INTENTA PARSEAR EL PRIMER NÚMERO MÁS ABAJO 
                                     double numero = 0;
                                     bool swYaEsbuenNumero = double.TryParse(auxNumero, out numero);
                                     if (swYaEsbuenNumero)
@@ -454,7 +490,7 @@ namespace CalculadoraAccesible
                 {
                     if (char.IsDigit(formula[sumador + añadido - 1])) //si hay un número antes del -
                     {
-                        formula = formula.Substring(0, sumador) + "+" + formula.Substring(sumador, formula.Length - sumador); //añadimos el +
+                        formula = formula.Substring(0, sumador + añadido) + "+" + formula.Substring(sumador + añadido, formula.Length - (sumador + añadido)); //añadimos el +
                         añadido++;
                     }
                 }
@@ -697,7 +733,165 @@ namespace CalculadoraAccesible
             }
             return num.ToString() + "/" + den.ToString();
         }
+
+        private string simplificarSignosRepetidos (string formula)
+        {
+            formula = simplificarTodosLosMenosAcumulados(formula);
+            formula = simplificarTodosLosMasAcumulados(formula);
+            return formula;
+        }
+
+        private string simplificarTodosLosMenosAcumulados(string formula)
+        {
+            formula = new ValidadorCadenas().quitarEspaciosEncadena(formula);
+            formula = simplificarSignosMenosAcumulados(formula);
+
+            if (formula.Contains("--"))
+                return simplificarTodosLosMenosAcumulados(formula);
+            
+            return formula;
+        }
+
+        private string simplificarTodosLosMasAcumulados(string formula)
+        {
+            formula = new ValidadorCadenas().quitarEspaciosEncadena(formula);
+            formula = simplificarSignosMasAcumulados(formula);
+
+            if (formula.Contains("++"))
+                return simplificarTodosLosMasAcumulados(formula);
+            
+            return formula;
+        }
+
+        public string simplificarTodosLosSignosRepetidos (string formula)
+        {
+            formula = new ValidadorCadenas().quitarEspaciosEncadena(formula);
+            formula = simplificarMasyMenosAcumulados(formula);
+
+            if (formula.Contains("++") || formula.Contains("--") || formula.Contains("+-") || formula.Contains("-+"))
+                return simplificarTodosLosSignosRepetidos(formula);
+
+            return formula;
+        }
+
+        private string simplificarMasyMenosAcumulados(string formula)
+        {
+            int ultimoSignoRepetido = formula.LastIndexOf("--");
+            if (ultimoSignoRepetido < formula.LastIndexOf("++")) ultimoSignoRepetido = formula.LastIndexOf("++");
+            if (ultimoSignoRepetido < formula.LastIndexOf("+-")) ultimoSignoRepetido = formula.LastIndexOf("+-");
+            if (ultimoSignoRepetido < formula.LastIndexOf("-+")) ultimoSignoRepetido = formula.LastIndexOf("-+");
+
+            int sumador = 0;
+            int sumadorMenos = 0;
+            bool signosMenosImpares;
+
+            if (ultimoSignoRepetido != -1)
+            {
+                sumador++;
+                if (ultimoSignoRepetido == formula.LastIndexOf("+-") || ultimoSignoRepetido == formula.LastIndexOf("--")) //si el signo donde empieza es menos, se lo suma
+                    sumadorMenos++;
+
+                ultimoSignoRepetido++; //le sumamos el lugar del último signo repetido
+
+                foreach (char c in formula.Substring(0, ultimoSignoRepetido).Reverse())
+                {
+                    if (c != '-' && c != '+') break; //si no es otro menos el que está antes del último menos, se sale del sumador
+                    if (c == '-') sumadorMenos++;
+                    sumador++;
+                }
+
+                if (sumador > 1) //si hay más de un signo menos
+                {
+                    if (sumadorMenos % 2 == 0) //si hay signos menos pares
+                        signosMenosImpares = false;
+                    else
+                        signosMenosImpares = true;
+
+                    string comienzoCadena = formula.Substring(0, ultimoSignoRepetido - sumador + 1);
+                    string finCadena = formula.Substring(ultimoSignoRepetido + 1, formula.Length - ultimoSignoRepetido - 1);
+                    if (signosMenosImpares)
+                        formula = comienzoCadena + "-" + finCadena; //si los negativos son impares es número negativo
+                    else
+                        formula = comienzoCadena + "+" + finCadena; //si los negativos son pares es número positivo
+
+                }
+            }
+
+            //if (formula.Length > 0) //se le quita los signos iniciales si es positivo, se chequea que no sea cadena vacía
+            //    if (formula[0] == '+')
+            //        formula = formula.Substring(0, formula.Length - 2);
+
+            return formula;
+        }
+
+        private string simplificarSignosMenosAcumulados(string formula)
+        {
+            int ultimoMenos = formula.LastIndexOf("--");
+            ultimoMenos++; //le sumamos el lugar del último menos
+            int sumador = 0;
+            bool signosMenosImpares = false;
+
+            if (ultimoMenos != -1)
+            {
+                sumador++;
+                foreach (char c in formula.Substring(0, ultimoMenos).Reverse())
+                {
+                    if (c != '-') break; //si no es otro menos el que está antes del último menos, se sale del sumador
+                    sumador++;
+                }
+
+                if (sumador > 1) //si hay más de un signo menos
+                {
+                    if (sumador % 2 == 0) //si hay signos menos pares
+                        signosMenosImpares = false;
+                    else
+                        signosMenosImpares = true;
+
+                    string comienzoCadena = formula.Substring(0, ultimoMenos - sumador + 1);
+                    string finCadena = formula.Substring(ultimoMenos + 1, formula.Length-ultimoMenos-1);
+                    if (signosMenosImpares)
+                        formula = comienzoCadena + "-" + finCadena; //si los negativos son impares es número negativo
+                    else
+                        formula = comienzoCadena + "+" + finCadena; //si los negativos son pares es número positivo
+
+                }
+            }
+            
+            return formula;
+        }
+
+        private string simplificarSignosMasAcumulados(string formula)
+        {
+            if (formula == "++") formula = "+";
+            int ultimoMas = formula.LastIndexOf("++");
+            ultimoMas++;
+            int sumador = 0;
+            //bool signosMImpares = false;
+
+            if (ultimoMas != -1)
+            {
+                sumador++;
+                foreach (char c in formula.Substring(0, ultimoMas).Reverse())
+                {
+                    if (c != '+') break; //si no es otro menos el que está antes del último menos, se sale del sumador
+                    sumador++;
+                }
+
+                if (sumador > 1) //si hay más de un signo menos
+                {
+                    
+                    string comienzoCadena = formula.Substring(0, ultimoMas - sumador + 1);
+                    string finCadena = formula.Substring(ultimoMas + 1, formula.Length - ultimoMas - 1);
+                    formula = comienzoCadena + "+" + finCadena; //se deja sólo un signo +
+
+                }
+            }
+
+            return formula;
+        }
     }
+
+    
 
     //string realizarTrigonometria (string formula)
     //{
